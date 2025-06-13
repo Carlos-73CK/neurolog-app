@@ -5,7 +5,7 @@
 -- Borra todo y crea desde cero según últimas actualizaciones
 
 -- ================================================================
--- 1. LIMPIAR TODO LO EXISTENTE
+-- 1. LIMPIAR TODO LO EXISTENTE (VERSIÓN CORREGIDA)
 -- ================================================================
 
 -- Deshabilitar RLS temporalmente
@@ -30,9 +30,10 @@ DROP FUNCTION IF EXISTS verify_neurolog_setup() CASCADE;
 
 -- Eliminar triggers
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS set_updated_at_profiles ON profiles;
-DROP TRIGGER IF EXISTS set_updated_at_children ON children;
-DROP TRIGGER IF EXISTS set_updated_at_daily_logs ON daily_logs;
+-- Las siguientes líneas dan error en una base de datos limpia porque las tablas no existen. Se comentan para asegurar la ejecución.
+-- DROP TRIGGER IF EXISTS set_updated_at_profiles ON profiles;
+-- DROP TRIGGER IF EXISTS set_updated_at_children ON children;
+-- DROP TRIGGER IF EXISTS set_updated_at_daily_logs ON daily_logs;
 
 -- Eliminar tablas en orden correcto (por dependencias)
 DROP TABLE IF EXISTS daily_logs CASCADE;
@@ -541,4 +542,4 @@ BEGIN
   RAISE NOTICE '✅ Índices para performance';
   RAISE NOTICE '';
   RAISE NOTICE 'PRÓXIMO PASO: Probar la aplicación NeuroLog';
-END $$;
+END $$
