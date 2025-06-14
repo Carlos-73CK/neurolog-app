@@ -14,11 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Deshabilitar clones superficiales para un mejor análisis
-          fetch-depth: 0  
+          fetch-depth: 0
       - name: SonarCloud Scan
-        # --- LÍNEA MODIFICADA A UNA VERSIÓN ESPECÍFICA ---
-        uses: SonarSource/sonarcloud-scan-action@v2.1.0
+        # Usamos el Docker container directamente para evitar problemas de resolución
+        uses: docker://sonarsource/sonar-scanner-cli:latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
