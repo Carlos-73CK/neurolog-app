@@ -1,8 +1,3 @@
-// ================================================================
-// src/components/reports/TimePatterns.tsx
-// ARREGLADO: Importar React y corregir todos los exports
-// ================================================================
-
 'use client';
 
 import React from 'react'; 
@@ -10,16 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Calendar, TrendingUp, TrendingDown, Minus, Brain, Target, AlertTriangle, CheckCircle } from 'lucide-react';
 
+// --- CORRECCIÓN: Definir un tipo claro para los logs ---
+interface Log {
+  created_at: string;
+  mood_score?: number | null;
+  intensity_level?: 'low' | 'medium' | 'high' | null;
+  category_name?: string | null;
+}
+
 interface TimePatternsProps {
-  logs: any[];
+  logs: Log[];
 }
 
 interface CorrelationAnalysisProps {
-  logs: any[];
+  logs: Log[];
 }
 
 interface AdvancedInsightsProps {
-  logs: any[];
+  logs: Log[];
 }
 
 // ================================================================
@@ -124,14 +127,18 @@ export function TimePatterns({ logs }: TimePatternsProps) {
 
 export function CorrelationAnalysis({ logs }: CorrelationAnalysisProps) {
   // Función helper para calcular correlación
-  function calculateCorrelation(data: any[], field1: string, field2Func: (item: any) => number): number {
+  function calculateCorrelation(data: Log[], field1: keyof Log, field2Func: (item: Log) => number): number {
     if (data.length < 2) return 0;
     
-    const x = data.map(item => item[field1]);
-    const y = data.map(field2Func);
+    // --- CORRECCIÓN: Filtrar para asegurar que los valores son numéricos ---
+    const validData = data.filter(item => typeof item[field1] === 'number');
+    if (validData.length < 2) return 0;
+
+    const x = validData.map(item => item[field1] as number);
+    const y = validData.map(field2Func);
     
-    const meanX = x.reduce((a, b) => a + b) / x.length;
-    const meanY = y.reduce((a, b) => a + b) / y.length;
+    const meanX = x.reduce((a, b) => a + b, 0) / x.length;
+    const meanY = y.reduce((a, b) => a + b, 0) / y.length;
     
     const numerator = x.reduce((sum, xi, i) => sum + (xi - meanX) * (y[i] - meanY), 0);
     const denomX = Math.sqrt(x.reduce((sum, xi) => sum + Math.pow(xi - meanX, 2), 0));
@@ -142,7 +149,7 @@ export function CorrelationAnalysis({ logs }: CorrelationAnalysisProps) {
 
   // Calcular correlación entre estado de ánimo e intensidad
   const moodIntensityCorr = calculateCorrelation(
-    logs.filter(l => l.mood_score && l.intensity_level),
+    logs, // El filtro se hace ahora dentro de la función
     'mood_score',
     log => log.intensity_level === 'low' ? 1 : log.intensity_level === 'medium' ? 2 : 3
   );
@@ -275,11 +282,11 @@ export function AdvancedInsights({ logs }: AdvancedInsightsProps) {
     }
 
     // Análisis de estado de ánimo
-    const moodLogs = logs.filter(log => log.mood_score);
+    const moodLogs = logs.filter(log => typeof log.mood_score === 'number');
     if (moodLogs.length > 5) {
-      const avgMood = moodLogs.reduce((sum, log) => sum + log.mood_score, 0) / moodLogs.length;
-      const recent = moodLogs.slice(0, 7);
-      const recentAvg = recent.reduce((sum, log) => sum + log.mood_score, 0) / recent.length;
+      const avgMood = moodLogs.reduce((sum, log) => sum + (log.mood_score || 0), 0) / moodLogs.length;
+      const recent = moodLogs.slice(-7); // Usar los últimos 7 para más precisión
+      const recentAvg = recent.length > 0 ? recent.reduce((sum, log) => sum + (log.mood_score || 0), 0) / recent.length : 0;
       
       const trend = recentAvg - avgMood;
       
@@ -306,7 +313,8 @@ export function AdvancedInsights({ logs }: AdvancedInsightsProps) {
 
     const categories = Object.entries(categoryCount);
     if (categories.length > 0) {
-      const mostUsedCategory = categories.sort(([,a], [,b]) => b - a)[0];
+      // --- CORRECCIÓN: Tipar explícitamente para el sort ---
+      const mostUsedCategory = categories.sort(([, a]: [string, number], [, b]: [string, number]) => b - a)[0];
       
       insights.push({
         type: 'info',
@@ -362,8 +370,8 @@ export function AdvancedInsights({ logs }: AdvancedInsightsProps) {
                 'secondary'
               }>
                 {insight.type === 'success' ? 'Positivo' :
-                 insight.type === 'warning' ? 'Atención' :
-                 'Info'}
+                  insight.type === 'warning' ? 'Atención' :
+                  'Info'}
               </Badge>
             </div>
           </CardContent>

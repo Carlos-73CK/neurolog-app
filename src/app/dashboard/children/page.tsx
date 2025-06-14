@@ -205,12 +205,13 @@ function FiltersCard({ filters, onFiltersChange }: FiltersCardProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Búsqueda por nombre */}
+          {/* Búsqueda por nombre (CORREGIDO) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Buscar por nombre</label>
+            <label htmlFor="search-by-name" className="text-sm font-medium">Buscar por nombre</label>
             <div className="relative">
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
+                id="search-by-name"
                 placeholder="Nombre del niño..."
                 value={filters.search || ''}
                 onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
@@ -219,7 +220,7 @@ function FiltersCard({ filters, onFiltersChange }: FiltersCardProps) {
             </div>
           </div>
 
-          {/* Relación */}
+          {/* Relación (Sin cambios, ya estaba bien) */}
           <Select 
             value={filters.relationship_type || 'all'} 
             onValueChange={(value) => onFiltersChange({ 
@@ -240,10 +241,11 @@ function FiltersCard({ filters, onFiltersChange }: FiltersCardProps) {
             </SelectContent>
           </Select>
 
-          {/* Rango de edad */}
+          {/* Rango de edad (CORREGIDO) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Edad máxima</label>
+            <label htmlFor="max-age-filter" className="text-sm font-medium">Edad máxima</label>
             <Input
+              id="max-age-filter"
               type="number"
               placeholder="Años"
               min="0"
@@ -260,6 +262,7 @@ function FiltersCard({ filters, onFiltersChange }: FiltersCardProps) {
     </Card>
   );
 }
+  
 
 // ================================================================
 // COMPONENTE PRINCIPAL

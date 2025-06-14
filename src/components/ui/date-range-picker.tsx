@@ -1,6 +1,3 @@
-// src/components/ui/date-range-picker.tsx
-// Componente de selector de rango de fechas
-
 'use client';
 
 import * as React from 'react';
@@ -18,23 +15,27 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
+// --- CORRECCIÓN 1: Añadir 'id' a las propiedades ---
 interface DatePickerWithRangeProps {
+  id?: string; // Hacemos que el id sea opcional
   className?: string;
   date?: DateRange;
-  setDate: (date: DateRange | undefined) => void;
+  onDateChange: (date: DateRange | undefined) => void; // Renombrado para claridad
 }
 
 export function DatePickerWithRange({
+  id, // --- CORRECCIÓN 2: Recibir el id ---
   className,
   date,
-  setDate,
+  onDateChange, // Renombrado para claridad
 }: DatePickerWithRangeProps) {
   return (
     <div className={cn('grid gap-2', className)}>
       <Popover>
         <PopoverTrigger asChild>
           <Button
-            id="date"
+            // --- CORRECCIÓN 3: Pasar el id al botón ---
+            id={id} 
             variant={'outline'}
             className={cn(
               'w-full justify-start text-left font-normal',
@@ -62,7 +63,7 @@ export function DatePickerWithRange({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={setDate}
+            onSelect={onDateChange} // Usamos el nuevo nombre
             numberOfMonths={2}
             locale={es}
           />

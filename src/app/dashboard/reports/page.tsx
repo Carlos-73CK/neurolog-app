@@ -1,8 +1,3 @@
-// ================================================================
-// src/app/dashboard/reports/page.tsx
-// Página principal de reportes y análisis - CORREGIDA
-// ================================================================
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -25,7 +20,6 @@ import { ProgressChart } from '@/components/reports/ProgressChart';
 import { CategoryDistribution } from '@/components/reports/CategoryDistribution';
 import { MoodTrendChart } from '@/components/reports/MoodTrendChart';
 import { ExportReportDialog } from '@/components/reports/ExportReportDialog';
-// ✅ ARREGLO: Importar todos los componentes desde TimePatterns.tsx
 import { TimePatterns, CorrelationAnalysis, AdvancedInsights } from '@/components/reports/TimePatterns';
 import type { DateRange } from 'react-day-picker';
 import { 
@@ -51,12 +45,13 @@ import { es } from 'date-fns/locale';
 // ================================================================
 // FUNCIÓN HELPER PARA CALCULAR TENDENCIA DE MEJORA
 // ================================================================
+// --- CORRECCIÓN: Añadido tipo explícito para 'logs' para mayor seguridad ---
 function calculateImprovementTrend(logs: any[]): number {
   if (logs.length < 2) return 0;
   
-  const moodLogs = logs.filter(log => log.mood_score).sort((a, b) => 
-    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
+  const moodLogs = logs
+    .filter(log => typeof log.mood_score === 'number')
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   
   if (moodLogs.length < 2) return 0;
   
@@ -64,8 +59,9 @@ function calculateImprovementTrend(logs: any[]): number {
   const firstHalf = moodLogs.slice(0, midpoint);
   const secondHalf = moodLogs.slice(midpoint);
   
-  const firstAvg = firstHalf.reduce((sum, log) => sum + log.mood_score, 0) / firstHalf.length;
-  const secondAvg = secondHalf.reduce((sum, log) => sum + log.mood_score, 0) / secondHalf.length;
+  // --- CORRECCIÓN: Usar (log.mood_score || 0) para asegurar que siempre es un número ---
+  const firstAvg = firstHalf.reduce((sum, log) => sum + (log.mood_score || 0), 0) / firstHalf.length;
+  const secondAvg = secondHalf.reduce((sum, log) => sum + (log.mood_score || 0), 0) / secondHalf.length;
   
   return secondAvg - firstAvg;
 }
@@ -100,14 +96,19 @@ export default function ReportsPage() {
     return true;
   });
 
+  // --- CORRECCIÓN: Separar y asegurar los cálculos de métricas ---
+  const logsWithMoodScore = filteredLogs.filter(log => typeof log.mood_score === 'number');
+  const averageMoodValue = logsWithMoodScore.length > 0 
+      ? (logsWithMoodScore.reduce((sum, log) => sum + (log.mood_score || 0), 0) / logsWithMoodScore.length)
+      : 0;
+      
   // Calcular métricas
   const metrics = {
     totalLogs: filteredLogs.length,
-    averageMood: filteredLogs.filter(l => l.mood_score).length > 0 
-      ? (filteredLogs.filter(l => l.mood_score).reduce((sum, l) => sum + l.mood_score, 0) / filteredLogs.filter(l => l.mood_score).length)
-      : 0,
+    averageMood: averageMoodValue,
     improvementTrend: calculateImprovementTrend(filteredLogs),
-    activeCategories: new Set(filteredLogs.map(l => l.category_name).filter(Boolean)).size,
+    // --- CORRECCIÓN: Usar 'category?.name' según la sugerencia de TypeScript ---
+    activeCategories: new Set(filteredLogs.map(l => l.category?.name).filter(Boolean)).size,
     followUpsRequired: filteredLogs.filter(l => l.follow_up_required).length,
     activeDays: new Set(filteredLogs.map(l => new Date(l.created_at).toDateString())).size
   };
@@ -122,7 +123,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Reportes y Análisis</h1>
@@ -136,7 +137,7 @@ export default function ReportsPage() {
         </Button>
       </div>
 
-      {/* Filters */}
+      
       <Card>
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
@@ -144,9 +145,9 @@ export default function ReportsPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Niño</label>
+              <label htmlFor="select-child-report" className="text-sm font-medium mb-2 block">Niño</label>
               <Select value={selectedChild} onValueChange={setSelectedChild}>
-                <SelectTrigger>
+                <SelectTrigger id="select-child-report">
                   <SelectValue placeholder="Seleccionar niño" />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,8 +162,9 @@ export default function ReportsPage() {
             </div>
             
             <div>
-              <label className="text-sm font-medium mb-2 block">Período</label>
+              <label htmlFor="date-range-picker-report" className="text-sm font-medium mb-2 block">Período</label>
               <DatePickerWithRange 
+                id="date-range-picker-report"
                 date={dateRange}
                 onDateChange={setDateRange}
               />
@@ -238,7 +240,7 @@ export default function ReportsPage() {
         />
       </div>
 
-      {/* Tabs de análisis */}
+      
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Resumen</TabsTrigger>
@@ -247,7 +249,7 @@ export default function ReportsPage() {
           <TabsTrigger value="insights">Insights</TabsTrigger>
         </TabsList>
 
-        {/* Tab: Resumen */}
+        
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
@@ -276,7 +278,7 @@ export default function ReportsPage() {
           </div>
         </TabsContent>
 
-        {/* Tab: Tendencias */}
+        
         <TabsContent value="trends" className="space-y-6">
           <Card>
             <CardHeader>
@@ -291,7 +293,7 @@ export default function ReportsPage() {
           </Card>
         </TabsContent>
 
-        {/* Tab: Patrones */}
+        
         <TabsContent value="patterns" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
@@ -320,7 +322,7 @@ export default function ReportsPage() {
           </div>
         </TabsContent>
 
-        {/* Tab: Insights */}
+        
         <TabsContent value="insights" className="space-y-6">
           <Card>
             <CardHeader>
@@ -336,7 +338,7 @@ export default function ReportsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Export Dialog */}
+      
       <ExportReportDialog 
         open={isExportDialogOpen}
         onOpenChange={setIsExportDialogOpen}

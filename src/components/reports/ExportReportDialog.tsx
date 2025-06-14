@@ -1,8 +1,3 @@
-// ================================================================
-// src/components/reports/ExportReportDialog.tsx
-// Diálogo para exportar reportes
-// ================================================================
-
 'use client';
 
 import { useState } from 'react';
@@ -11,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Download, Mail } from 'lucide-react';
+import { CheckedState } from '@radix-ui/react-checkbox';
 
 interface ExportReportDialogProps {
   open: boolean;
@@ -48,6 +44,14 @@ export function ExportReportDialog({ open, onOpenChange, data, metrics }: Export
       setIsExporting(false);
     }
   };
+  
+  // --- CORRECCIÓN: Función para manejar el cambio del Checkbox ---
+  const handleCheckedChange = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+    return (checked: CheckedState) => {
+      // Convierte 'indeterminate' o false a false, y true a true.
+      setter(!!checked); 
+    };
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,11 +65,12 @@ export function ExportReportDialog({ open, onOpenChange, data, metrics }: Export
         
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
+            {/* --- CORRECCIÓN SONAR: Asociar label con control --- */}
+            <label htmlFor="export-format" className="text-sm font-medium text-gray-700 mb-2 block">
               Formato
             </label>
             <Select value={format} onValueChange={setFormat}>
-              <SelectTrigger>
+              <SelectTrigger id="export-format">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -76,16 +81,17 @@ export function ExportReportDialog({ open, onOpenChange, data, metrics }: Export
             </Select>
           </div>
           
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700 block">
+          {/* --- CORRECCIÓN SONAR: Usar fieldset y legend para agrupar controles --- */}
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium text-gray-700 block">
               Incluir en el reporte
-            </label>
+            </legend>
             
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="charts" 
                 checked={includeCharts}
-                onCheckedChange={setIncludeCharts}
+                onCheckedChange={handleCheckedChange(setIncludeCharts)}
               />
               <label htmlFor="charts" className="text-sm text-gray-700">
                 Gráficos y visualizaciones
@@ -96,7 +102,7 @@ export function ExportReportDialog({ open, onOpenChange, data, metrics }: Export
               <Checkbox 
                 id="rawdata" 
                 checked={includeRawData}
-                onCheckedChange={setIncludeRawData}
+                onCheckedChange={handleCheckedChange(setIncludeRawData)}
               />
               <label htmlFor="rawdata" className="text-sm text-gray-700">
                 Datos detallados por registro
@@ -107,13 +113,13 @@ export function ExportReportDialog({ open, onOpenChange, data, metrics }: Export
               <Checkbox 
                 id="email" 
                 checked={sendByEmail}
-                onCheckedChange={setSendByEmail}
+                onCheckedChange={handleCheckedChange(setSendByEmail)}
               />
               <label htmlFor="email" className="text-sm text-gray-700">
                 Enviar por correo electrónico
               </label>
             </div>
-          </div>
+          </fieldset>
           
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-sm text-gray-600">
