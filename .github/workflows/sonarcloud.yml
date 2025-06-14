@@ -17,8 +17,8 @@ jobs:
           # Deshabilitar clones superficiales para un mejor análisis
           fetch-depth: 0  
       - name: SonarCloud Scan
-        # --- LÍNEA CORREGIDA ---
-        uses: SonarSource/sonarcloud-scan-action@v2
+        # --- LÍNEA MODIFICADA A UNA VERSIÓN ESPECÍFICA ---
+        uses: SonarSource/sonarcloud-scan-action@v2.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
