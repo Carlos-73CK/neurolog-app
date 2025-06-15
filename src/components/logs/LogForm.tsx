@@ -1,6 +1,3 @@
-// src/components/logs/LogForm.tsx
-// Formulario actualizado para crear/editar registros diarios con el nuevo modelo
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -35,15 +32,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useChildren } from '@/hooks/use-children';
 import { useLogs } from '@/hooks/use-logs';
-import { supabase, uploadFile, getPublicUrl, STORAGE_BUCKETS } from '@/lib/supabase';
+// --- CORRECCIÓN 1: Importar 'supabase' desde la ubicación correcta ---
+import { supabase } from '@/lib/supabase';
+// --- CORRECCIÓN 2: Importar solo las funciones necesarias de supabase (si están separadas) ---
+import { uploadFile, getPublicUrl, STORAGE_BUCKETS } from '@/lib/supabase';
 import type { 
   DailyLog, 
   LogInsert, 
   LogUpdate, 
   Category, 
-  IntensityLevel,
-  LogAttachment,
-  ChildWithRelation
+  // --- CORRECCIÓN 3: Se elimina la importación de 'ChildWithRelation' que no se usa ---
 } from '@/types';
 import { 
   CalendarIcon, 
@@ -64,6 +62,17 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { CheckedState } from '@radix-ui/react-checkbox';
+
+
+const attachmentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  url: z.string(),
+  type: z.enum(['image', 'video', 'audio', 'document']),
+  size: z.number()
+});
+export type LogAttachment = z.infer<typeof attachmentSchema>;
 
 // ================================================================
 // ESQUEMAS DE VALIDACIÓN
@@ -74,7 +83,7 @@ const logFormSchema = z.object({
   category_id: z.string().optional(),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres').max(200, 'El título no puede exceder 200 caracteres'),
   content: z.string().min(10, 'El contenido debe tener al menos 10 caracteres').max(5000, 'El contenido no puede exceder 5000 caracteres'),
-  mood_score: z.number().min(1).max(5).optional(),
+  mood_score: z.number().min(1).max(10).optional().nullable(),
   intensity_level: z.enum(['low', 'medium', 'high']).default('medium'),
   log_date: z.string(),
   is_private: z.boolean().default(false),
@@ -82,16 +91,9 @@ const logFormSchema = z.object({
   location: z.string().optional(),
   weather: z.string().optional(),
   follow_up_required: z.boolean().default(false),
-  follow_up_date: z.string().optional(),
-  attachments: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    url: z.string(),
-    type: z.enum(['image', 'video', 'audio', 'document']),
-    size: z.number()
-  })).default([])
+  follow_up_date: z.string().optional().nullable(),
+  attachments: z.array(attachmentSchema).default([])
 }).refine((data) => {
-  // Si requiere seguimiento, debe tener fecha
   if (data.follow_up_required && !data.follow_up_date) {
     return false;
   }
@@ -116,7 +118,7 @@ interface LogFormProps {
 }
 
 interface MoodSelectorProps {
-  value?: number;
+  value?: number | null;
   onChange: (value: number | undefined) => void;
 }
 
@@ -202,8 +204,9 @@ function AttachmentsManager({ attachments, onChange, childId }: AttachmentsManag
         const fileExt = file.name.split('.').pop();
         const fileName = `${childId}/${Date.now()}-${file.name}`;
         
-        await uploadFile('attachments', fileName, file);
-        const url = getPublicUrl('attachments', fileName);
+        // --- CORRECCIÓN 4: Usar el enum STORAGE_BUCKETS ---
+        await uploadFile(STORAGE_BUCKETS.ATTACHMENTS, fileName, file);
+        const url = getPublicUrl(STORAGE_BUCKETS.ATTACHMENTS, fileName);
         
         let type: LogAttachment['type'] = 'document';
         if (file.type.startsWith('image/')) type = 'image';
@@ -211,7 +214,7 @@ function AttachmentsManager({ attachments, onChange, childId }: AttachmentsManag
         else if (file.type.startsWith('audio/')) type = 'audio';
         
         newAttachments.push({
-          id: `${Date.now()}-${Math.random()}`,
+          id: crypto.randomUUID(),
           name: file.name,
           url,
           type,
@@ -527,7 +530,7 @@ export default function LogForm({ log, childId, mode, onSuccess, onCancel }: Log
                           <SelectItem key={child.id} value={child.id}>
                             <div className="flex items-center space-x-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarImage src={child.avatar_url} />
+                                <AvatarImage src={child.avatar_url ?? undefined} />
                                 <AvatarFallback className="text-xs">
                                   {child.name.charAt(0)}
                                 </AvatarFallback>
@@ -547,7 +550,7 @@ export default function LogForm({ log, childId, mode, onSuccess, onCancel }: Log
               {selectedChild && (
                 <div className="p-4 bg-blue-50 rounded-lg flex items-center space-x-3">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={selectedChild.avatar_url} />
+                    <AvatarImage src={selectedChild.avatar_url ?? undefined} />
                     <AvatarFallback className="bg-blue-200 text-blue-700">
                       {selectedChild.name.charAt(0)}
                     </AvatarFallback>
@@ -588,7 +591,7 @@ export default function LogForm({ log, childId, mode, onSuccess, onCancel }: Log
                               <div className="flex items-center space-x-2">
                                 <div 
                                   className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: category.color }}
+                                  style={{ backgroundColor: category.color ?? '#ccc' }}
                                 />
                                 <span>{category.name}</span>
                               </div>
@@ -902,7 +905,8 @@ export default function LogForm({ log, childId, mode, onSuccess, onCancel }: Log
                         <Input 
                           type="date" 
                           min={format(new Date(), 'yyyy-MM-dd')}
-                          {...field} 
+                          value={field.value ?? ''}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                       <FormDescription>

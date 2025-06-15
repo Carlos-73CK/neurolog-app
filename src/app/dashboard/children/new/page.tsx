@@ -13,7 +13,8 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Plus, Save, X } from 'lucide-react';
 import Link from 'next/link';
-import type { ChildInsert, EmergencyContact, MedicalInfo, EducationalInfo, PrivacySettings } from '@/types';
+// --- CORRECCIÓN: Se eliminaron los tipos no utilizados ---
+import type { ChildInsert, EmergencyContact } from '@/types';
 
 export default function NewChildPage() {
   const router = useRouter();
@@ -102,9 +103,9 @@ export default function NewChildPage() {
         ...formData,
         name: formData.name.trim(),
         emergency_contact: emergencyContacts,
-        birth_date: formData.birth_date || null,
-        diagnosis: formData.diagnosis || null,
-        notes: formData.notes || null
+        birth_date: formData.birth_date ?? null,
+        diagnosis: formData.diagnosis?? null,
+        notes: formData.notes ?? null
       });
       
       // Redirigir a la lista de niños
@@ -291,7 +292,7 @@ export default function NewChildPage() {
                 </Label>
                 <Input
                   id="school"
-                  value={formData.educational_info?.school || ''}
+                  value={formData.educational_info?.school ?? ''}
                   onChange={(e) => setFormData({
                     ...formData,
                     educational_info: {
@@ -309,7 +310,7 @@ export default function NewChildPage() {
                 </Label>
                 <Input
                   id="grade"
-                  value={formData.educational_info?.grade || ''}
+                  value={formData.educational_info?.grade ?? ''}
                   onChange={(e) => setFormData({
                     ...formData,
                     educational_info: {
@@ -328,7 +329,7 @@ export default function NewChildPage() {
               </Label>
               <Input
                 id="teacher"
-                value={formData.educational_info?.teacher || ''}
+                value={formData.educational_info?.teacher ?? ''}
                 onChange={(e) => setFormData({
                   ...formData,
                   educational_info: {

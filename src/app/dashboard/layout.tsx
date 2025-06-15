@@ -1,15 +1,14 @@
-// src/app/dashboard/layout.tsx
-// Layout del dashboard completamente responsivo
-
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import React from 'react'; // Es buena práctica importar React
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// --- CORRECCIÓN: Se crea una interfaz para las props ---
+interface DashboardLayoutProps {
+  readonly children: React.ReactNode;
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50/30">
       {/* Desktop: Flex layout, Mobile: Stacked layout */}
